@@ -6,22 +6,30 @@ import smtpd
 import asyncore
 import time
 
+
 class FakeSMTPServer(smtpd.SMTPServer):
     """A Fake smtp server"""
 
     def __init__(*args, **kwargs):
-        print "Running fake smtp server on port 25"
+        print "Running fake smtp server"
         smtpd.SMTPServer.__init__(*args, **kwargs)
 
     def process_message(*args, **kwargs):
-        mail = open("mails/"+str(time.time())+".eml", "w")
+        mail = open("mails/" + str(time.time()) + ".eml", "w")
         print "New mail from " + args[2]
         mail.write(args[4])
         mail.close
         pass
 
 if __name__ == "__main__":
-    smtp_server = FakeSMTPServer(('localhost', 25), None)
+    import argparse
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-p", "--port", type=int, default=25,
+                    help="port to listen on. Default 25.")
+    args = parser.parse_args()
+
+    smtp_server = FakeSMTPServer(('localhost', args.port), None)
     try:
         asyncore.loop()
     except KeyboardInterrupt:
