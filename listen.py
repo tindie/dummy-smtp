@@ -5,6 +5,18 @@
 import smtpd
 import asyncore
 import time
+import os
+import errno
+
+
+def mkdir_p(path):
+    try:
+        os.makedirs(path)
+    except OSError as exc:
+        if exc.errno == errno.EEXIST and os.path.isdir(path):
+            pass
+        else:
+            raise
 
 
 class FakeSMTPServer(smtpd.SMTPServer):
@@ -15,11 +27,11 @@ class FakeSMTPServer(smtpd.SMTPServer):
         smtpd.SMTPServer.__init__(*args, **kwargs)
 
     def process_message(*args, **kwargs):
-        mail = open("mails/" + str(time.time()) + ".eml", "w")
+        mail = open(os.path.join("mails", str(time.time()) + ".eml"), "w")
         print "New mail from " + args[2]
         mail.write(args[4])
         mail.close
-        pass
+
 
 if __name__ == "__main__":
     import argparse
@@ -28,6 +40,9 @@ if __name__ == "__main__":
     parser.add_argument("-p", "--port", type=int, default=25,
                     help="port to listen on. Default 25.")
     args = parser.parse_args()
+
+    os.chdir(os.path.dirname(os.path.abspath(__file__)))
+    mkdir_p('mails')
 
     smtp_server = FakeSMTPServer(('localhost', args.port), None)
     try:
